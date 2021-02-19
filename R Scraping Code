@@ -1,0 +1,45 @@
+#################################################Load Relevant Packages#####################################
+#install.packages(c('rvest', 'stringr', 'stringi', 'raster', 'tidyverse'))
+library('rvest', 'stringr', 'stringi', 'raster', 'dplyr')
+rm(list=ls())
+
+#################################################Scrape Data#####################################
+#Define Function
+scraping_function <- function(URL){
+  Scrape <- paste('https://cgwp.uvic.ca/detail.php?pid=', toString(URL))
+  simple <- read_html(url(Scrape))
+  
+  
+  Information <- simple %>%
+    html_nodes(".recordLine") %>%
+    html_text()
+  
+  
+  Information
+  print(Information)
+  Information <- gsub("Rank detail", "Rank detail:", Information)
+  Splice <- as.character(regexpr(pattern = ':', Information, fixed = TRUE))
+  New_values_Clean <- substr(Information, as.numeric(Splice) + 1, 234234)
+  
+  
+  Column_Names_New <- substr(Information, 1, as.numeric(Splice) - 1)
+  
+  df <- data.frame(matrix(unlist(New_values_Clean), nrow=length(1), byrow=FALSE))
+  names(df) <- Column_Names_New
+return(df)
+}
+
+
+
+#empty dataframe
+total <- data.frame()
+
+
+for (num in 830970:830999){
+  print(num)
+  data <- scraping_function(num)
+  total = dplyr::bind_rows(data, total)
+}
+
+
+
